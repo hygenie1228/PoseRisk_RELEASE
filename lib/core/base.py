@@ -21,7 +21,7 @@ from models import hmr
 from smpl import SMPL
 
 from vis_utils import save_obj, visualize_box
-from score_utils import REBA, RULA
+from score_utils import REBA, RULA, report_pose
 from coord_utils import axis_angle_to_euler_angle
 
 class DataProcessing:
@@ -32,6 +32,7 @@ class DataProcessing:
                 device=device,
                 batch_size=cfg.DATASET.batch_size,
                 display=False,
+                detection_threshold=0.4,
                 detector_type='yolo',
                 output_format='dict',
                 yolo_img_size=416,
@@ -57,7 +58,7 @@ class DataProcessing:
             if tracking_results[person_id]['frames'].shape[0] >= min_frame_num:
                 filtered_results.append(tracking_results[person_id])
         tracking_results = filtered_results
-    
+
         idx = self.select_target_id(tracking_results)
         #print("!!!")
         #idx = 2
@@ -175,13 +176,15 @@ class Predictor:
 
         if debug_frame > 0:
             idx = np.where(frames==debug_frame)[0][0]
-
+            
             pose = torch.tensor(debug_result[idx]).view(1, -1).float()
             shape = torch.zeros((1,10)).float()
             
             smpl_mesh_coord, _ = self.smpl_model.layer['neutral'](pose, shape)
             smpl_mesh_coord = smpl_mesh_coord.numpy().astype(np.float32).reshape(-1, 3) * 1000
             save_obj(smpl_mesh_coord, self.smpl_model.face, osp.join(output_path, 'smpl_model.obj'))
+
+            report_pose(result[idx])
             print()
             print("Debug file is saved in ", output_path)   
             os.system(f'rm -rf {image_folder}')
@@ -200,17 +203,33 @@ class Predictor:
             print()
             print("===> Post Processing...")  
 
-            final_score, scores, group_a, group_b, logs = \
+            final_score_reba, scores, group_a, group_b, logs = \
                 self.post_processing_result(reba_results, reba_joint_names, timestamp, output_path, title="REBA")
 
-            self.visualize_result(image_folder, bboxes, timestamp, fps, final_score, scores, group_a, group_b, reba_joint_names, logs, output_path, title="REBA")
-
-            os.system(f'rm -rf {image_folder}')
+            self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_reba, scores, group_a, group_b, reba_joint_names, logs, output_path, title="REBA")
 
             f = open(osp.join(output_path, 'reba_result.txt'), 'w')
-            data = f"AVG Score: {final_score[0]} \n%50 Score: {final_score[1]} \n%10 Score: {final_score[2]} \nMAX Score: {final_score[3]}"
+            data = f"AVG Score: {final_score_reba[0]} \n%50 Score: {final_score_reba[1]} \n%10 Score: {final_score_reba[2]} \nMAX Score: {final_score_reba[3]}"
             f.write(data)
             f.close()
+
+        if self.run_rula:
+            rela_results, rela_joint_names = self.rula(result, add_info)
+        
+            print()
+            print("===> Post Processing...")  
+
+            final_score_rula, scores, group_a, group_b, logs = \
+                self.post_processing_result(rela_results, rela_joint_names, timestamp, output_path, title="RULA")
+
+            self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_rula, scores, group_a, group_b, rela_joint_names, logs, output_path, title="RULA")
+
+            f = open(osp.join(output_path, 'rula_result.txt'), 'w')
+            data = f"AVG Score: {final_score_rula[0]} \n%50 Score: {final_score_rula[1]} \n%10 Score: {final_score_rula[2]} \nMAX Score: {final_score_rula[3]}"
+            f.write(data)
+            f.close()
+
+        os.system(f'rm -rf {image_folder}')
 
         print()
         print()
@@ -220,10 +239,18 @@ class Predictor:
         if self.run_reba:
             print()
             print("----- REBA -----")
-            print("AVG Score: ", final_score[0])
-            print("%50 Score: ", final_score[1])
-            print("%10 Score: ", final_score[2])
-            print("MAX Score: ", final_score[3])
+            print("AVG Score: ", final_score_reba[0])
+            print("%50 Score: ", final_score_reba[1])
+            print("%10 Score: ", final_score_reba[2])
+            print("MAX Score: ", final_score_reba[3])
+
+        if self.run_rula:
+            print()
+            print("----- REBA -----")
+            print("AVG Score: ", final_score_rula[0])
+            print("%50 Score: ", final_score_rula[1])
+            print("%10 Score: ", final_score_rula[2])
+            print("MAX Score: ", final_score_rula[3])
 
 
     def post_processing_result(self, results, joint_names, timestamp, output_path, title=''):

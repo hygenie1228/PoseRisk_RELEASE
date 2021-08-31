@@ -4,6 +4,7 @@ import torch
 import math
 import cv2
 
+
 def rotation_matrix_to_rotVec(Rmat):    
     theta = math.acos(((Rmat[0, 0] + Rmat[1, 1] + Rmat[2, 2]) - 1) / 2)
     sin_theta = math.sin(theta)

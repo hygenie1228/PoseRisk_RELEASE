@@ -9,7 +9,7 @@ from core.config import cfg, update_config
 
 parser = argparse.ArgumentParser(description='Estimate RULA and REBA score')
 parser.add_argument('--gpu', type=str, default='0', help='assign multi-gpus by comma concat')
-parser.add_argument('--type', type=str, default='REBA', help='Score type')
+parser.add_argument('--type', type=str, default='REBA,RULA', help='Score type')
 parser.add_argument('--input', type=str, default='example/input.mp4', help='input video')
 parser.add_argument('--info', type=str, default='example/additional_information.json', help='input additional_information.json')
 parser.add_argument('--output', type=str, default='output', help='output directory')
