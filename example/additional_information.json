@@ -1,0 +1,11 @@
+{
+    "sitting": 1
+,   "body_contact": 1
+,   "arm_contact": 1
+,   "feet_ground_contact": 1
+,   "leg_posture": 1
+,   "whole_load/force": 1
+,   "arm_wrist_load/force": 1
+,   "neck_body_leg_load/force": 1
+,   "handle_exist": 1
+}
