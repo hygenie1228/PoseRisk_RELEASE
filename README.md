@@ -23,7 +23,7 @@ ${ROOT}
 ```
 - Download `basicModel_f_lbs_10_207_0_v1.0.0.pkl`, `basicModel_m_lbs_10_207_0_v1.0.0.pkl`, and `basicModel_neutral_lbs_10_207_0_v1.0.0.pkl` from [here](https://smpl.is.tue.mpg.de/downloads) (female & male) and [here](http://smplify.is.tue.mpg.de/) (neutral) to `${ROOT}/data/base_data/human_models`.  
 - Download SPIN data from [here](https://github.com/nkolot/SPIN). Please reference `Fetch data` section in the repository.
-### Run code
+## Run code
 We provide REBA and RULA score method. You should put some additional information for score estimation. Please refer `example/additional_information.json`.  
 
 Write data according to the criteria below.
@@ -48,5 +48,5 @@ cd ${ROOT}
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug_frame {id of frame}
 ```
 
-### Reference
+## Reference
 TBD
