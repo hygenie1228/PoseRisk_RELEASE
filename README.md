@@ -30,12 +30,12 @@ Most of the evaluation criteria referred from: [https://kosha.or.kr/kosha/busine
 for REBA,
 - `Legs_bilateral_weight_bearing/walking/sitting`: (1-2) If balanced of two legs 1, if not 2
 - `Load/Force Score`: (0-3) load amount, rapid build up of force, etc.
-- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT!)**
+- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
 - `Coupling`: (0-3) well fitting handle, acceptable body part, etc.
 - `Activity_Score`: (0-3) repeated small range actions large acitivity, etc.
 
 for RULA,
-- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT!)**
+- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
 - `A_Muscle_use`, `A_Load/Force`: (0-1, 0-3) load amount, rapid build up of force, etc.
 - `Legs_bilateral_weight_bearing`: (1-2) If balanced of two legs 1, if not 2
 - `B_Muscle_use`, `B_Load/Force` : (0-1, 0-3) well fitting handle, acceptable body part, etc.
