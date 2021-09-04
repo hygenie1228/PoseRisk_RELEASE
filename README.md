@@ -26,13 +26,19 @@ ${ROOT}
 ## Run code
 We provide REBA and RULA score method. You should put some additional information for score estimation. Please refer `example/additional_information.json`.  
 
-Write data according to the criteria below.
-- `sitting`: if a person is sit 1, if not 0
-- `arm_contact`: if an arm is supported 1, if not 0
-- `feet_ground_contact`: if both feet are on the ground 1, if not 0
-- `sitting_status`: evaluate sitting posture, good 1, worst 2
-- `whole_load/force`, `arm_wrist_load/force`, `neck_body_leg_load/force`: evaluate load/force based on each criteria
-- `handle_exist`: evaluate score related to the handle
+Most of the evaluation criteria referred from: [https://kosha.or.kr/kosha/business/musculoskeletal_c_d.do](https://kosha.or.kr/kosha/business/musculoskeletal_c_d.do)  
+for REBA,
+- `Legs_bilateral_weight_bearing/walking/sitting`: (1-2) If balanced of two legs 1, if not 2
+- `Load/Force Score`: (0-3) load amount, rapid build up of force, etc.
+- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT!)**
+- `Coupling`: (0-3) well fitting handle, acceptable body part, etc.
+- `Activity_Score`: (0-3) repeated small range actions large acitivity, etc.
+
+for RULA,
+- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT!)**
+- `A_Muscle_use`, `A_Load/Force`: (0-1, 0-3) load amount, rapid build up of force, etc.
+- `Legs_bilateral_weight_bearing`: (1-2) If balanced of two legs 1, if not 2
+- `B_Muscle_use`, `B_Load/Force` : (0-1, 0-3) well fitting handle, acceptable body part, etc.
 
 Below is the running example.  
 

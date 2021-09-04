@@ -62,16 +62,16 @@ class REBA:
         for pose in poses:
             # Group A
             group_a_score, group_a_list = self.group_a(pose, add_info)
-            group_a_score = group_a_score + add_info["whole_load/force"]
+            group_a_score = group_a_score + add_info["REBA"]["Load/Force Score"]
             
             # Group B
             group_b_score, group_b_list = self.group_b(pose, add_info)
-            group_b_score = group_b_score + add_info["handle"]
+            group_b_score = group_b_score + add_info["REBA"]["Coupling"]
 
             # Final Score
             group_a_score = int(np.clip(group_a_score, 1, 12))
             group_b_score = int(np.clip(group_b_score, 1, 12))
-            final_score = self.table_c[group_a_score-1][group_b_score-1]
+            final_score = self.table_c[group_a_score-1][group_b_score-1] + add_info["REBA"]["Activity_Score"]
             
             data = {
                 'score': final_score,
@@ -83,7 +83,29 @@ class REBA:
 
         return results, ['trunk', 'neck', 'leg', 'upper_arm', 'lower_arm', 'wrist']
             
+    def action_level(self, score):
+        score = round(score)
+        action_level = None
+        action_name = None
+
+        if score in [1]:
+            action_level = 1
+            acition_name = "Negligible Risk"
+        elif score in [2,3]:
+            action_level = 2
+            acition_name = "Low Risk. Change may be needed."
+        elif score in [4,5,6,7]:
+            action_level = 3
+            acition_name = "Medium Risk. Further Investigate. Change Soon."
+        elif score in [8,9,10]:
+            action_level = 4
+            acition_name = "High Risk. Investigate and Implement Change"
+        elif score >= 11:
+            action_level = 5
+            acition_name = "Very High Risk. Implement Change"
         
+        return action_level, action_name
+
     def group_a(self, pose, add_info):
         trunk, neck, leg = 0,0,0
         trunk += self.trunk_bending(pose)
@@ -92,8 +114,8 @@ class REBA:
         neck += self.neck_bending(pose)
         neck += self.neck_side_bending(pose)
         neck += self.neck_twisted(pose)
+        leg += add_info["REBA"]["Legs_bilateral_weight_bearing/walking/sitting"]
         leg += self.leg_bending(pose, add_info)
-        leg -= (1-add_info["feet_ground_contact"])
 
         trunk = int(np.clip(trunk, 1, 5))
         neck = int(np.clip(neck, 1, 3))
@@ -106,7 +128,7 @@ class REBA:
         upper_arm += self.upper_arm_bending(pose)
         upper_arm += self.shoulder(pose)
         upper_arm += self.upper_arm_aduction(pose)
-        upper_arm -= add_info["arm_contact"]
+        upper_arm -= add_info["REBA"]["Arm_supported_leaning"]
         lower_arm += self.lower_arm_bending(pose)
         wrist += self.wrist_bending(pose)
         wrist += self.wrist_side_bending(pose)
@@ -175,7 +197,7 @@ class REBA:
 
         if angle>=0 and angle<30: score1=0
         elif angle>=30 and angle<=60: score1=1
-        elif angle>60 and add_info["sitting"] == 0 : score1=2
+        elif angle>60 and add_info["REBA"]["Legs_bilateral_weight_bearing/walking/sitting"] > 1 : score1=2
         else:
             score1=0
 
@@ -184,7 +206,7 @@ class REBA:
 
         if angle>-30 and angle<=0: score2=0
         elif angle>=-60 and angle<=-30: score2=1
-        elif angle<-60 and add_info["sitting"] == 0 : score2=2
+        elif angle<-60 and add_info["REBA"]["Legs_bilateral_weight_bearing/walking/sitting"] > 1 : score2=2
 
         return max(score1, score2)
 
@@ -482,11 +504,11 @@ class RULA:
         for pose in poses:
             # Group A
             group_a_score, group_a_list = self.group_a(pose, add_info)
-            group_a_score = group_a_score + add_info["arm_wrist_load/force"]
+            group_a_score = group_a_score + add_info["RULA"]["A_Muscle_use"] + add_info["RULA"]["A_Load/Force"]
             
             # Group B
             group_b_score, group_b_list = self.group_b(pose, add_info)
-            group_b_score = group_b_score + add_info["neck_body_leg_load/force"]
+            group_b_score = group_b_score + add_info["RULA"]["B_Muscle_use"] + add_info["RULA"]["B_Load/Force"]
 
             # Final Score
             group_a_score = int(np.clip(group_a_score, 1, 8))
@@ -503,12 +525,32 @@ class RULA:
 
         return results, ['upper_arm', 'lower_arm', 'wrist', 'wrist_twist', 'neck', 'trunk', 'leg']
 
+    def action_level(self, score):
+        score = round(score)
+        action_level = None
+        action_name = None
+        
+        if score in [1,2]:
+            action_level = 1
+            acition_name = "acceptable posture"
+        elif score in [3,4]:
+            action_level = 2
+            acition_name = "further investigation, change may be needed"
+        elif score in [5,6]:
+            action_level = 3
+            acition_name = "further investigation, change soon"
+        elif score >= 7:
+            action_level = 4
+            acition_name = "investigate and implement change"
+        
+        return action_level, action_name
+
     def group_a(self, pose, add_info):
         upper_arm, lower_arm, wrist, wrist_twist = 0,0,0,0
 
         upper_arm += self.upper_arm_bending(pose)
         upper_arm += self.shoulder(pose)
-        upper_arm -= add_info["arm_contact"]
+        upper_arm -= add_info["RULA"]["Arm_supported_leaning"]
         lower_arm += self.lower_arm_bending(pose)
         lower_arm += self.lower_arm_cross_out(pose)
         wrist += self.wrist_bending(pose)
@@ -528,13 +570,10 @@ class RULA:
         neck += self.neck_bending(pose)
         neck += self.neck_twisted(pose)
         neck += self.neck_side_bending(pose)
-        if add_info["sitting"] > 0:
-            trunk += self.trunk_bending(pose)
-        else:
-            trunk += (1+add_info["sitting_status"])
+        trunk += self.trunk_bending(pose)
         trunk += self.trunk_twisted(pose)
         trunk += self.trunk_side_bending(pose)
-        leg += (2-add_info["feet_ground_contact"])
+        leg += add_info["RULA"]["Legs_bilateral_weight_bearing"]
 
         neck = int(np.clip(neck, 1, 6))
         trunk = int(np.clip(trunk, 1, 6))

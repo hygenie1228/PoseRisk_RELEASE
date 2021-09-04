@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from collections import Counter
 import matplotlib.pyplot as plt
+from scipy.stats import mode
 
 from multiple_datasets import MultipleDatasets
 from demo_dataset import CropDataset
@@ -206,10 +207,10 @@ class Predictor:
             final_score_reba, scores, group_a, group_b, logs = \
                 self.post_processing_result(reba_results, reba_joint_names, timestamp, output_path, title="REBA")
 
-            self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_reba, scores, group_a, group_b, reba_joint_names, logs, output_path, title="REBA")
+            self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_reba, scores, group_a, group_b, reba_joint_names, logs, add_info["RULA"], output_path, title="REBA")
 
             f = open(osp.join(output_path, 'reba_result.txt'), 'w')
-            data = f"AVG Score: {final_score_reba[0]} \n%50 Score: {final_score_reba[1]} \n%10 Score: {final_score_reba[2]} \nMAX Score: {final_score_reba[3]}"
+            data = f"AVG Score: {final_score_reba[0]} \n%50 Score: {final_score_reba[1]} \n%10 Score: {final_score_reba[2]} \nMAX Score: {final_score_reba[3]} \nMODE Score: {final_score_reba[4]}"
             f.write(data)
             f.close()
 
@@ -222,10 +223,10 @@ class Predictor:
             final_score_rula, scores, group_a, group_b, logs = \
                 self.post_processing_result(rela_results, rela_joint_names, timestamp, output_path, title="RULA")
 
-            self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_rula, scores, group_a, group_b, rela_joint_names, logs, output_path, title="RULA")
+            self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_rula, scores, group_a, group_b, rela_joint_names, logs, add_info["RULA"], output_path, title="RULA")
 
             f = open(osp.join(output_path, 'rula_result.txt'), 'w')
-            data = f"AVG Score: {final_score_rula[0]} \n%50 Score: {final_score_rula[1]} \n%10 Score: {final_score_rula[2]} \nMAX Score: {final_score_rula[3]}"
+            data = f"AVG Score: {final_score_rula[0]} \n%50 Score: {final_score_rula[1]} \n%10 Score: {final_score_rula[2]} \nMAX Score: {final_score_rula[3]} \nMODE Score: {final_score_rula[4]}"
             f.write(data)
             f.close()
 
@@ -239,18 +240,20 @@ class Predictor:
         if self.run_reba:
             print()
             print("----- REBA -----")
-            print("AVG Score: ", final_score_reba[0])
-            print("%50 Score: ", final_score_reba[1])
-            print("%10 Score: ", final_score_reba[2])
-            print("MAX Score: ", final_score_reba[3])
+            print("AVG Score:\t", final_score_reba[0])
+            print("%50 Score:\t", final_score_reba[1])
+            print("%10 Score:\t", final_score_reba[2])
+            print("MAX Score:\t", final_score_reba[3])
+            print("MODE Score:\t", final_score_reba[4])
 
         if self.run_rula:
             print()
-            print("----- REBA -----")
-            print("AVG Score: ", final_score_rula[0])
-            print("%50 Score: ", final_score_rula[1])
-            print("%10 Score: ", final_score_rula[2])
-            print("MAX Score: ", final_score_rula[3])
+            print("----- RULA -----")
+            print("AVG Score:\t", final_score_rula[0])
+            print("%50 Score:\t", final_score_rula[1])
+            print("%10 Score:\t", final_score_rula[2])
+            print("MAX Score:\t", final_score_rula[3])
+            print("MODE Score:\t", final_score_rula[4])
 
 
     def post_processing_result(self, results, joint_names, timestamp, output_path, title=''):
@@ -324,10 +327,11 @@ class Predictor:
         score50 = round(scores[:len(scores)//2].mean(),3)
         score10 = round(scores[:len(scores)//10].mean(),3)
         score_max = round(scores.max(),3)
-        return (score_avg, score50, score10, score_max), scores_log, group_a, group_b, logs
+        score_mode = mode(scores).mode.item()
+        return (score_avg, score50, score10, score_max, score_mode), scores_log, group_a, group_b, logs
 
     
-    def visualize_result(self, image_folder, bboxes, timestamp, fps, final_score, scores, group_a, group_b, joint_names, logs, output_path, title="REBA"):
+    def visualize_result(self, image_folder, bboxes, timestamp, fps, final_score, scores, group_a, group_b, joint_names, logs, add_info, output_path, title="REBA"):
         image_file_names = [
             osp.join(image_folder, x)
             for x in os.listdir(image_folder)
@@ -352,20 +356,25 @@ class Predictor:
             canvas = np.zeros((canvas_h, canvas_w, 3))
             img = cv2.imread(file_path)
             
-            
+            cv2.putText(canvas, "frame: " + str(i), (resize_w+15, canvas_h-15), font, 0.4, color, 1, cv2.LINE_AA)
+
             if i in timestamp[1]:
                 idx = np.where(timestamp[1]==i)[0][0]
                 idx = idx // 4 * 4
                 bbox = bboxes[idx]
                 img = visualize_box(img, bbox[None,:])
-
-                cv2.putText(canvas, "frame: " + str(i), (resize_w+15, canvas_h-15), font, 0.4, color, 1, cv2.LINE_AA)
+                
                 cv2.putText(canvas, title+" Score: " + str(scores[idx]), (resize_w+15, 30), font, 0.6, color, 1, cv2.LINE_AA)
                 cv2.putText(canvas, "Group A Score: " + str(group_a[idx]), (resize_w+15, 55), font, 0.6, color, 1, cv2.LINE_AA)
                 cv2.putText(canvas, "Group B Score: " + str(group_b[idx]), (resize_w+15, 80), font, 0.6, color, 1, cv2.LINE_AA)
                 cv2.putText(canvas, "- Score per Joints ", (resize_w+15, 150), font, font_size, color, 1, cv2.LINE_AA)
                 for j, joint in enumerate(joint_names):
                     cv2.putText(canvas, joint + ": " + str(logs[idx][j]), (resize_w+15, 175 + 20*j), font, font_size, color, 1, cv2.LINE_AA)
+                for j, (k, v) in enumerate(add_info.items()):
+                    cv2.putText(canvas, k + ": " + str(v), (resize_w+15, 315 + 20*j), font, font_size, color, 1, cv2.LINE_AA)
+            else:
+                cv2.putText(canvas, "Unable to provide score", (resize_w+15, canvas_h-65), font, 0.5, color, 1, cv2.LINE_AA)
+                cv2.putText(canvas, "score due to human detection error", (resize_w+15, canvas_h-45), font, 0.5, color, 1, cv2.LINE_AA)
 
             img = cv2.resize(img, (resize_w, resize_h), interpolation = cv2.INTER_AREA)
             canvas[:resize_h, :resize_w, :] = img

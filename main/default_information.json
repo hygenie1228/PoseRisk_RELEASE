@@ -1,11 +1,20 @@
 {
-    "sitting": 1
-,   "arm_contact": 1
-,   "feet_ground_contact": 1
+"REBA":
+{
+    "Legs_bilateral_weight_bearing/walking/sitting":1
+,   "Load/Force Score":0
+,   "Arm_supported_leaning":0
+,   "Coupling":0
+,   "Activity_Score":0
+},
 
-,   "sitting_status": 1
-,   "whole_load/force": 1
-,   "arm_wrist_load/force": 1
-,   "neck_body_leg_load/force": 1
-,   "handle": 1
+"RULA":
+{
+    "Arm_supported_leaning":0
+,   "A_Muscle_use":0
+,   "A_Load/Force":0
+,   "Legs_bilateral_weight_bearing":0
+,   "B_Muscle_use":0
+,   "B_Load/Force":0
+}
 }
