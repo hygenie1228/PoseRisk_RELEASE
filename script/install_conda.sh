@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+export CONDA_ENV_NAME=risk
+echo $CONDA_ENV_NAME
+
+conda create -n $CONDA_ENV_NAME python=3.7
+
+eval "$(conda shell.bash hook)"
+conda activate $CONDA_ENV_NAME
+
 pip install -r requirements.txt
 cd lib
 if [ -d 'multi_person_tracker' ]; then
@@ -17,5 +25,4 @@ else
     rm -rf SPIN/data
     ln -s ../../data/base_data/spin_data SPIN/data
 fi
-
 cd ..

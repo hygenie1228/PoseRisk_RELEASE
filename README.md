@@ -10,7 +10,13 @@ This repository is the implementation of an automatic human hazard detection mod
 
 
 ## Install guidelines
-We recommend you to use an [Anaconda](https://www.anaconda.com/) virtual environment. Install [PyTorch](https://pytorch.org/) >= 1.2 according to your GPU driver and Python >= 3.7.2, and run `sh requirements.sh`. 
+We recommend you to use an [Anaconda](https://www.anaconda.com/) virtual environment. Install [PyTorch](https://pytorch.org/) >= 1.2 according to your GPU driver and Python >= 3.7.2.  
+Install the requirements using conda:
+```
+cd ${ROOT}
+sh script/install_conda.sh
+```
+
 ## Preparations
 We used [Simple Multi Person Tracker](https://github.com/mkocabas/multi-person-tracker) for video human detection, and [SPIN](https://github.com/nkolot/SPIN) for human pose estimation.
 Put these two repository in `lib` directory.
