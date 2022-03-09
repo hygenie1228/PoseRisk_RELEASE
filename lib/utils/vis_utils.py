@@ -7,6 +7,19 @@ import cv2
 import os
 from core.config import cfg
 
+def report_pose(poses):
+    smpl_joint_names = ('L_Hip', 'R_Hip', 'Torso', 'L_Knee', 'R_Knee', 'Spine', 'L_Ankle', 'R_Ankle', 'Chest', 'L_Toe',
+        'R_Toe', 'Neck', 'L_Thorax', 'R_Thorax', 'Head', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist',
+        'R_Wrist', 'L_Hand', 'R_Hand')
+
+    for i, pose in enumerate(poses[1:]):
+        joint_name = smpl_joint_names[i]
+        if joint_name not in ('L_Thorax', 'R_Thorax', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist', 'R_Wrist', 'L_Hand', 'R_Hand'):
+            print(f"{joint_name}: \tBEND1 {pose[0]:.3f}\tBEND2 {pose[2]:.3f}\tTWIST {pose[1]:.3f}")
+        else:
+            print(f"{joint_name}: \tBEND1 {pose[1]:.3f}\tBEND2 {pose[2]:.3f}\tTWIST {pose[0]:.3f}")
+
+
 def save_video(imgs, fps=20, file_name=''):
     h,w,c = imgs[0].shape
     video_writer = cv2.VideoWriter(file_name, cv2.VideoWriter_fourcc('M','J','P','G'), fps, (w, h))
@@ -170,8 +183,7 @@ def axisEqual3D(ax):
     for ctr, dim in zip(centers, 'xyz'):
         getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
 
-
-def vis_3d_pose(kps_3d, kps_line, joint_set_name='', prefix='vis3dpose', gt=False, ax_in=None):
+def vis_3d_pose(kps_3d, kps_line, joint_set_name='', file_path='image.png', frame=0, ax_in=None, kps_3d_vis=None):
     if joint_set_name == 'human36':
         r_joints = [1, 2, 3, 14, 15, 16]
     elif joint_set_name == 'coco':
@@ -181,12 +193,18 @@ def vis_3d_pose(kps_3d, kps_line, joint_set_name='', prefix='vis3dpose', gt=Fals
     else:
         r_joints = []
 
-    kps_3d_vis = np.ones((len(kps_3d), 1))
+    if kps_3d_vis is None:
+        kps_3d_vis = np.ones((len(kps_3d), 1))
+    else:
+        kps_3d_vis = kps_3d_vis.reshape(-1, 1)
+        
     if not ax_in:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
     else:
         ax = ax_in
+
+    fig.set_size_inches(5, 3.75)
 
     for l in range(len(kps_line)):
         i1 = kps_line[l][0]
@@ -207,25 +225,21 @@ def vis_3d_pose(kps_3d, kps_line, joint_set_name='', prefix='vis3dpose', gt=Fals
     ax.set_xlabel('X axis')
     ax.set_ylabel('Z axis')
     ax.set_zlabel('Y axis')
+    
+    ax.set_xlim3d(-800, 800)
+    ax.set_ylim3d(-800, 800)
+    ax.set_zlim3d(-800, 800)
 
-    title = f'3D Ground Truth' if gt else f' 3D Prediction'
+    title = f'3D Skeleton - frame: {frame}'
     ax.set_title(title)
-    ax.legend()
     axisEqual3D(ax)
 
     if not ax_in:
-        #plt.show()
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
-        #cv2.waitKey(1)
-
-        now = datetime.now()
-        file_name = f'{prefix}_{now.isoformat()[:-7]}_{"3d_gt" if gt else "3d_pred"}.jpg'
-        fig.savefig(osp.join(cfg.vis_dir, file_name))
+        fig.savefig(file_path)
         plt.close(fig=fig)
     else:
         return ax
-
+        
 def save_obj(v, f=None, file_name=''):
     obj_file = open(file_name, 'w')
     for i in range(len(v)):

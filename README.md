@@ -5,9 +5,8 @@ This repository is the implementation of an automatic human hazard detection mod
 
 
 <p align="center">
-  <img src="asset/example.gif" width="60%" />
+  <img src="asset/example.gif" width="80%" />
 </p>
-
 
 
 ## Install guidelines

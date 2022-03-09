@@ -5,6 +5,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+lib/multi_person_tracker/
+lib/SPIN/
+
 # C extensions
 *.so
 
