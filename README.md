@@ -13,7 +13,6 @@ This repository is the implementation of an automatic human hazard detection mod
 We recommend you to use an [Anaconda](https://www.anaconda.com/) virtual environment. Install [PyTorch](https://pytorch.org/) >= 1.2 according to your GPU driver and Python >= 3.7.2.  
 Install the requirements using conda:
 ```
-cd ${ROOT}
 sh script/install_conda.sh
 ```
 
@@ -57,13 +56,11 @@ Below is the running example.
 
 Example:
 ```
-cd ${ROOT}
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} 
 ```
 
 If want to debug only for one frame, you can get smpl model by using `debug_frame` option.
 ```
-cd ${ROOT}
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug_frame {id of frame}
 ```
 
