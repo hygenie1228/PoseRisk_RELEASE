@@ -1,4 +1,4 @@
-# HazardDetection with Pose estimation
+# PoseRisk: Pose-based Hazard Scoring
 
 ## Introduction  
 This repository is the implementation of an automatic human hazard detection model based on a human posture. This project has collaborated with [SNU HIS LAB](http://his.snu.ac.kr/).  
