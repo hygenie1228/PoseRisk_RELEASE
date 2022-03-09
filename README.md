@@ -2,6 +2,14 @@
 
 ## Introduction  
 This repository is the implementation of an automatic human hazard detection model based on a human posture. This project has collaborated with [SNU HIS LAB](http://his.snu.ac.kr/).  
+
+
+<p float="center">
+  <img src="asset/example.gif" width="60%" />
+</p>
+
+
+
 ## Install guidelines
 We recommend you to use an [Anaconda](https://www.anaconda.com/) virtual environment. Install [PyTorch](https://pytorch.org/) >= 1.2 according to your GPU driver and Python >= 3.7.2, and run `sh requirements.sh`. 
 ## Preparations
@@ -19,7 +27,7 @@ ${ROOT}
 |-- data  
 |   |-- base_data  
 |   |   |-- human_models  
-|   |-- spin_data
+|   |   |-- spin_data
 ```
 - Download `basicModel_f_lbs_10_207_0_v1.0.0.pkl`, `basicModel_m_lbs_10_207_0_v1.0.0.pkl`, and `basicModel_neutral_lbs_10_207_0_v1.0.0.pkl` from [here](https://smpl.is.tue.mpg.de/downloads) (female & male) and [here](http://smplify.is.tue.mpg.de/) (neutral) to `${ROOT}/data/base_data/human_models`.  
 - Download SPIN data from [here](https://github.com/nkolot/SPIN). Please reference `Fetch data` section in the repository.
