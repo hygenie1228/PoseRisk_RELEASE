@@ -4,7 +4,7 @@
 This repository is the implementation of an automatic human hazard detection model based on a human posture. This project has collaborated with [SNU HIS LAB](http://his.snu.ac.kr/).  
 
 
-<p float="center">
+<p align="center">
   <img src="asset/example.gif" width="60%" />
 </p>
 
