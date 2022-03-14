@@ -57,8 +57,7 @@ class DataProcessing:
 
         # tracking    
         print() 
-        print("===> Get human tracking results...")  
-        
+        print("===> Get human tracking results...") 
         tracking_results = self.tracker(image_path) 
 
         filtered_results = []
@@ -117,7 +116,7 @@ class DataProcessing:
             cv2.imwrite(osp.join(tmp_path, '{0:09d}.jpg'.format(idx)),frame)
             idx += 1
 
-            #if idx == 50:
+            #if idx == 1500:
             #    print("!!!")
             #    break
 

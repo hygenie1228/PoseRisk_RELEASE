@@ -14,6 +14,7 @@ parser.add_argument('--input', type=str, default='example/input.mp4', help='inpu
 parser.add_argument('--info', type=str, default='example/additional_information.json', help='input additional_information.json')
 parser.add_argument('--output', type=str, default='output', help='output directory')
 parser.add_argument('--visualize', type=bool, default=True, help='do result visualization')
+parser.add_argument('--debug', action='store_true', help='for debuging')
 parser.add_argument('--debug_frame', type=int, default=-1, help='for debuging, input frame number')
 parser.add_argument('--cfg', type=str, help='experiment configure file name')
 

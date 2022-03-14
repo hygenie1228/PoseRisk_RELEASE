@@ -164,7 +164,7 @@ class RULA:
         if angle1>-70 and angle1<110:
             if abs(angle2)<20: score2=1
             elif angle2<-20 or (angle2>20 and angle2<=45): score2=2
-            elif angle2>45 and angle<=90: score2=3
+            elif angle2>45 and angle2<=90: score2=3
             elif angle>90: score2=4
             else: score2=1
         else: score2=1
@@ -300,7 +300,7 @@ class RULA:
         return max(score1, score2)
 
     def trunk_bending(self, pose, joint_cam):
-        angle = joint_cam[self.joint_name.index('Torso')][0]
+        angle = pose[self.joint_name.index('Torso')][0]
 
         if abs(angle)<5: return 1
         elif angle>5 and angle<20: return 2
@@ -309,14 +309,14 @@ class RULA:
         else: return 1
 
     def trunk_side_bending(self, pose, joint_cam):
-        angle = joint_cam[self.joint_name.index('Torso')][2]
+        angle = pose[self.joint_name.index('Torso')][2]
 
         if abs(angle)<10: return 0
         elif abs(angle)>10: return 1
         else: return 0
     
     def trunk_twisted(self, pose, joint_cam):
-        angle = joint_cam[self.joint_name.index('Torso')][1]
+        angle = pose[self.joint_name.index('Torso')][1]
 
         if abs(angle)<10: return 0
         elif abs(angle)>10: return 1

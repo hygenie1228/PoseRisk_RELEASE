@@ -13,18 +13,19 @@ lib/SPIN/
 
 # custom
 .idea/*
-example2
-# *.png
+*.png
 *.jpg
 *.out
 experiment/
 log/
+data/NRF
 data/*/*.json
 data/*/*/*.json
 data/*/images
 data*/data
 data/*/annotation
 data/*/annotations
+example/*.mp4
 
 
 # Distribution / packaging

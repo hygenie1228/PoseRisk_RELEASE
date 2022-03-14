@@ -64,7 +64,7 @@ class REBA:
             group_a_score = int(np.clip(group_a_score, 1, 12))
             group_b_score = int(np.clip(group_b_score, 1, 12))
             final_score = self.table_c[group_a_score-1][group_b_score-1] + add_info["REBA"]["Activity_Score"]
-            
+
             data = {
                 'score': final_score,
                 'group_a': group_a_score,
@@ -131,7 +131,7 @@ class REBA:
         return self.table_b[upper_arm-1][lower_arm-1][wrist-1], [upper_arm, lower_arm, wrist]
 
     def trunk_bending(self, pose, joint_cam):
-        angle = joint_cam[self.joint_name.index('Torso')][0]
+        angle = pose[self.joint_name.index('Torso')][0]
 
         if abs(angle)<5: return 1
         elif (angle>5 and angle<20) or (angle>-20 and angle<-5): return 2

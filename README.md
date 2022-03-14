@@ -18,7 +18,7 @@ sh script/install_conda.sh
 
 ## Preparations
 We used [Simple Multi Person Tracker](https://github.com/mkocabas/multi-person-tracker) for video human detection, and [SPIN](https://github.com/nkolot/SPIN) for human pose estimation.
-Put these two repository in `lib` directory.
+If these are not in `lib` directory after installation, put these two repository in `lib` directory.
 ```
 ${ROOT}  
 |-- lib  
