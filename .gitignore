@@ -26,6 +26,7 @@ data*/data
 data/*/annotation
 data/*/annotations
 example/*.mp4
+output
 
 
 # Distribution / packaging
