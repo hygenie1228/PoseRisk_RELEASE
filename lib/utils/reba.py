@@ -268,13 +268,17 @@ class REBA:
 
     def lower_arm_bending(self, pose, joint_cam):
         score1, score2 = 0, 0
-        angle = pose[self.joint_name.index('L_Elbow')][1]
+        angle1 = pose[self.joint_name.index('L_Elbow')][1]
+        angle2 = pose[self.joint_name.index('L_Elbow')][2]
+        angle = max(angle1, angle2)
 
         if angle>-100 and angle<-60: score1=1
         elif angle<-100 or (angle>-60 and angle<0): score1=2
         else: score1=1
 
-        angle = pose[self.joint_name.index('R_Elbow')][1]
+        angle1 = pose[self.joint_name.index('R_Elbow')][1]
+        angle2 = pose[self.joint_name.index('R_Elbow')][2]
+        angle = max(angle1, angle2)
 
         if angle>60 and angle<100: score2=1
         elif angle>100 or (angle>0 and angle<60): score2=2
