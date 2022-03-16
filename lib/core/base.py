@@ -49,7 +49,7 @@ class DataProcessing:
         os.system(f'rm -rf {image_path}')
 
         print("\n===> Data preprocessing...")
-        file_num, fps = get_images(input_path, image_path, debug=True)
+        file_num, fps = get_images(input_path, image_path, debug=False)
         min_frame_num = file_num * cfg.DATASET.min_frame_ratio
 
         if min_frame_num > 1000: min_frame_num = 1000
