@@ -5,7 +5,7 @@ This repository is the implementation of an automatic human hazard detection mod
 
 
 <p align="center">
-  <img src="asset/example.gif" width="85%" />
+  <img src="asset/reba_example.gif" width="85%" />
 </p>
 
 
