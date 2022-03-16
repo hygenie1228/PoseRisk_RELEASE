@@ -44,8 +44,8 @@ for REBA,
 - `Sitting`: (0-1) If seated 1, if not 0
 - `Load/Force Score_L/R)`: (0-3) load amount, rapid build up of force, etc.
 - `Arm_supported_leaning_L/R`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
-- `Coupling`: (0-3) well fitting handle, acceptable body part, etc.
-- `Activity_Score`: (0-3) repeated small range actions large acitivity, etc.
+- `Coupling_L/R`: (0-3) well fitting handle, acceptable body part, etc.
+- `Activity_Score_L/R`: (0-3) repeated small range actions large acitivity, etc.
 
 for RULA,
 - `Arm_supported_leaning_L/R`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
@@ -57,11 +57,12 @@ Below is the running example.
 
 Example:
 ```
-cd {Root}
+cd ${ROOT}
 conda activate risk
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} 
 ```
 
+## Debug mode
 If want to get get a log of scores, you should use `debug` option.
 ```
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug
@@ -71,8 +72,8 @@ If want to debug about poses of several joints, you should use `debug_joints` op
 ```
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug --debug_joints {joint names for debugging}
 ```
-
-If want to get mesh model only for one frame, you should use `debug` option.
+  
+If want to get mesh model only for one frame, you should use `debug_frame` option.
 ```
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug --debug_frame {id of frame}
 ```

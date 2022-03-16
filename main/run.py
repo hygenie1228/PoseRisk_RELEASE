@@ -29,4 +29,4 @@ print("Work on GPU: ", os.environ['CUDA_VISIBLE_DEVICES'])
 from core.base import Predictor
 
 predictor = Predictor(args)
-predictor(args.input, args.info, args.output, args.debug_frame)
+predictor(args.input, args.info, args.output)

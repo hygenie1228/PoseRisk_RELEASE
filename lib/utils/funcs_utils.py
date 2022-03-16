@@ -43,8 +43,8 @@ def get_images(file_name, tmp_path, debug=False):
             idx += 1
 
 
-            if debug and (idx == 50):
-                print("==> Debug mode")
+            if debug and (idx == 1500):
+                print("\n==> Debug mode")
                 break
 
         cap.release()

@@ -2,23 +2,18 @@ import os.path as osp
 from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import os
 from core.config import cfg
 
-def report_pose(poses):
-    smpl_joint_names = ('L_Hip', 'R_Hip', 'Torso', 'L_Knee', 'R_Knee', 'Spine', 'L_Ankle', 'R_Ankle', 'Chest', 'L_Toe',
-        'R_Toe', 'Neck', 'L_Thorax', 'R_Thorax', 'Head', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist',
-        'R_Wrist', 'L_Hand', 'R_Hand')
-
-    for i, pose in enumerate(poses[1:]):
-        joint_name = smpl_joint_names[i]
-        if joint_name not in ('L_Thorax', 'R_Thorax', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist', 'R_Wrist', 'L_Hand', 'R_Hand'):
-            print(f"{joint_name}: \tBEND1 {pose[0]:.3f}\tBEND2 {pose[2]:.3f}\tTWIST {pose[1]:.3f}")
-        else:
-            print(f"{joint_name}: \tBEND1 {pose[1]:.3f}\tBEND2 {pose[2]:.3f}\tTWIST {pose[0]:.3f}")
-
+def pose_to_str(poses):
+    pose_log = []
+    for i, pose in enumerate(poses):
+        str_list = []
+        for j, pose_i in enumerate(pose):
+            str_list.append(f"({pose_i[0]:.3f}, {pose_i[1]:.3f}, {pose_i[2]:.3f})")
+        pose_log.append(str_list)
+    return pose_log
 
 def save_video(imgs, fps=20, file_name=''):
     h,w,c = imgs[0].shape

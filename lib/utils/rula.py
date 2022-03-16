@@ -57,6 +57,8 @@ class RULA:
             [5,5,6,7,7,7,7]
         ])
 
+        self.eval_items = ['Upper_arm (L,R)', 'Lower_arm (L,R)', 'Wrist (L,R)', 'Wrist_twist (L,R)', 'Neck', 'Trunk', 'Leg']
+
     def __call__(self, poses, joint_cams, add_info):
         results = []
 
@@ -65,27 +67,30 @@ class RULA:
             joint_cam = joint_cams[ii]
 
             # Group A
-            group_a_score, group_a_list = self.group_a(pose, joint_cam, add_info)
-            group_a_score = group_a_score + add_info["RULA"]["A_Muscle_use"] + add_info["RULA"]["A_Load/Force"]
+            group_a_score_L, group_a_score_R, group_a_list = self.group_a(pose, joint_cam, add_info)
+            group_a_score_L = group_a_score_L + add_info["RULA"]["A_Muscle_use_L"] + add_info["RULA"]["A_Load/Force_L"]
+            group_a_score_R = group_a_score_R + add_info["RULA"]["A_Muscle_use_R"] + add_info["RULA"]["A_Load/Force_R"]
             
             # Group B
             group_b_score, group_b_list = self.group_b(pose, joint_cam, add_info)
             group_b_score = group_b_score + add_info["RULA"]["B_Muscle_use"] + add_info["RULA"]["B_Load/Force"]
 
             # Final Score
-            group_a_score = int(np.clip(group_a_score, 1, 7))
+            group_a_score_L = int(np.clip(group_a_score_L, 1, 7))
+            group_a_score_R = int(np.clip(group_a_score_R, 1, 7))
             group_b_score = int(np.clip(group_b_score, 1, 7))
-            final_score = self.table_c[group_a_score-1][group_b_score-1]
+            
+            final_score_L = self.table_c[group_a_score_L-1][group_b_score-1]
+            final_score_R = self.table_c[group_a_score_R-1][group_b_score-1]
+            final_score = max(final_score_L, final_score_R)
             
             data = {
                 'score': final_score,
-                'group_a': group_a_score,
-                'group_b': group_b_score,
-                'log_score': group_a_list+group_b_list
+                'log_score': group_a_list + group_b_list
             }
             results.append(data)
 
-        return results, ['upper_arm', 'lower_arm', 'wrist', 'wrist_twist', 'neck', 'trunk', 'leg']
+        return results
 
     def action_level(self, score):
         score = round(score)
@@ -108,7 +113,7 @@ class RULA:
         return action_level, action_name
 
     def group_a(self, pose, joint_cam, add_info):
-        upper_arm, lower_arm, wrist, wrist_twist = 0,0,0,0
+        upper_arm, lower_arm, wrist, wrist_twist = np.array([0,0]), np.array([0,0]), np.array([0,0]), np.array([0,0])
 
         upper_arm += self.upper_arm_bending(pose, joint_cam, add_info)
         upper_arm += self.shoulder_rise(pose, joint_cam)
@@ -119,12 +124,17 @@ class RULA:
         wrist += self.wrist_side_bending(pose, joint_cam)
         wrist_twist += self.wrist_twist(pose, joint_cam)
 
-        upper_arm = int(np.clip(upper_arm, 1, 6))
-        lower_arm = int(np.clip(lower_arm, 1, 3))
-        wrist = int(np.clip(wrist, 1, 4))
-        wrist_twist = int(np.clip(wrist_twist, 1, 2))
-        return self.table_a[upper_arm-1][lower_arm-1][wrist-1][wrist_twist-1], [upper_arm, lower_arm, wrist, wrist_twist]
-      
+        upper_arm = np.clip(upper_arm, 1, 6)
+        lower_arm = np.clip(lower_arm, 1, 3)
+        wrist = np.clip(wrist, 1, 4)
+        wrist_twist = np.clip(wrist_twist, 1, 2)
+
+        group_a_score_L = self.table_a[upper_arm[0]-1][lower_arm[0]-1][wrist[0]-1][wrist_twist[0]-1]
+        group_a_score_R = self.table_a[upper_arm[1]-1][lower_arm[1]-1][wrist[1]-1][wrist_twist[1]-1]
+        group_a_list = [f'{upper_arm[0]},{upper_arm[1]}', f'{lower_arm[0]},{lower_arm[1]}', f'{wrist[0]},{wrist[1]}', f'{wrist_twist[0]},{wrist_twist[1]}']
+
+        return group_a_score_L, group_a_score_R, group_a_list
+
 
     def group_b(self, pose, joint_cam, add_info):
         neck, trunk, leg = 0,0,0
@@ -167,7 +177,7 @@ class RULA:
         else: score2=1
         score2 -= add_info["RULA"]["Arm_supported_leaning_R"]
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def shoulder_rise(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -196,7 +206,7 @@ class RULA:
         elif angle>90: score2=1
         else: score2=0
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def upper_arm_aduction(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -213,7 +223,7 @@ class RULA:
         elif angle>45: score2=1
         else: score2=0
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def lower_arm_bending(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -229,7 +239,7 @@ class RULA:
         elif angle>100 or (angle>0 and angle<60): score2=2
         else: score2=1
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def lower_arm_cross_out(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -245,7 +255,7 @@ class RULA:
         elif angle<-10 or angle>45: score2=1
         else: score2=0
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def wrist_bending(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -263,7 +273,7 @@ class RULA:
         elif abs(angle)>15: score2=3
         else: score2=1
         
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def wrist_side_bending(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -279,7 +289,7 @@ class RULA:
         elif abs(angle)>10: score2=1
         else: score2=0
         
-        return max(score1, score2)
+        return np.array([score1, score2])
     
     def wrist_twist(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -295,7 +305,7 @@ class RULA:
         elif abs(angle)>45: score2=2
         else: score2=1
         
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def trunk_bending(self, pose, joint_cam):
         angle = pose[self.joint_name.index('Torso')][0]

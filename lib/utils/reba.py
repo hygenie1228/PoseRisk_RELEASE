@@ -42,8 +42,7 @@ class REBA:
             [12,12,12,12,12,12,12,12,12,12,12,12]
         ])
 
-        self.sagittal = np.array([0,0,0])
-        self.coronal = np.array([0,0,0])
+        self.eval_items = ['Trunk', 'Neck', 'Leg', 'Upper_arm (L,R)', 'Lower_arm (L,R)', 'Wrist (L,R)']
 
     def __call__(self, poses, joint_cams, add_info):
         results = []
@@ -57,23 +56,26 @@ class REBA:
             group_a_score = group_a_score + add_info["REBA"]["Load/Force Score"]
             
             # Group B
-            group_b_score, group_b_list = self.group_b(pose, joint_cam, add_info)
-            group_b_score = group_b_score + add_info["REBA"]["Coupling"]
+            group_b_score_L, group_b_score_R, group_b_list = self.group_b(pose, joint_cam, add_info)
+            group_b_score_L = group_b_score_L + add_info["REBA"]["Coupling_L"]
+            group_b_score_R = group_b_score_R + add_info["REBA"]["Coupling_R"]
 
             # Final Score
             group_a_score = int(np.clip(group_a_score, 1, 12))
-            group_b_score = int(np.clip(group_b_score, 1, 12))
-            final_score = self.table_c[group_a_score-1][group_b_score-1] + add_info["REBA"]["Activity_Score"]
+            group_b_score_L = int(np.clip(group_b_score_L, 1, 12))
+            group_b_score_R = int(np.clip(group_b_score_R, 1, 12))
+            
+            final_score_L = self.table_c[group_a_score-1][group_b_score_L-1] + add_info["REBA"]["Activity_Score_L"]
+            final_score_R = self.table_c[group_a_score-1][group_b_score_R-1] + add_info["REBA"]["Activity_Score_R"]
+            final_score = max(final_score_L, final_score_R)
 
             data = {
                 'score': final_score,
-                'group_a': group_a_score,
-                'group_b': group_b_score,
-                'log_score': group_a_list+group_b_list
+                'log_score': group_a_list + group_b_list
             }
             results.append(data)
 
-        return results, ['trunk', 'neck', 'leg', 'upper_arm', 'lower_arm', 'wrist']
+        return results
             
     def action_level(self, score):
         score = round(score)
@@ -115,7 +117,7 @@ class REBA:
       
 
     def group_b(self, pose, joint_cam, add_info):
-        upper_arm, lower_arm, wrist = 0,0,0
+        upper_arm, lower_arm, wrist = np.array([0,0]), np.array([0,0]), np.array([0,0])
         upper_arm += self.upper_arm_bending(pose, joint_cam, add_info)
         upper_arm += self.shoulder_rise(pose, joint_cam)
         upper_arm += self.upper_arm_aduction(pose, joint_cam)
@@ -123,10 +125,14 @@ class REBA:
         wrist += self.wrist_bending(pose, joint_cam)
         wrist += self.wrist_side_bending_twisted(pose, joint_cam)
 
-        upper_arm = int(np.clip(upper_arm, 1, 6))
-        lower_arm = int(np.clip(lower_arm, 1, 2))
-        wrist = int(np.clip(wrist, 1, 3))
-        return self.table_b[upper_arm-1][lower_arm-1][wrist-1], [upper_arm, lower_arm, wrist]
+        upper_arm = np.clip(upper_arm, 1, 6)
+        lower_arm = np.clip(lower_arm, 1, 2)
+        wrist = np.clip(wrist, 1, 3)
+
+        group_b_score_L = self.table_b[upper_arm[0]-1][lower_arm[0]-1][wrist[0]-1]
+        group_b_score_R = self.table_b[upper_arm[1]-1][lower_arm[1]-1][wrist[1]-1]
+        group_b_list = [f'{upper_arm[0]},{upper_arm[1]}', f'{lower_arm[0]},{lower_arm[1]}', f'{wrist[0]},{wrist[1]}']
+        return group_b_score_L, group_b_score_R, group_b_list
 
     def trunk_bending(self, pose, joint_cam):
         angle = pose[self.joint_name.index('Torso')][0]
@@ -210,7 +216,7 @@ class REBA:
         else: score2=1
         score2 -= add_info["REBA"]["Arm_supported_leaning_R"]
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def shoulder_rise(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -239,7 +245,7 @@ class REBA:
         elif angle>90: score2=1
         else: score2=0
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def upper_arm_aduction(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -258,7 +264,7 @@ class REBA:
         elif angle1<-45 or angle2>10: score2=1
         else: score2=0
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def lower_arm_bending(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -274,7 +280,7 @@ class REBA:
         elif angle>100 or (angle>0 and angle<60): score2=2
         else: score2=1
 
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def wrist_bending(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -290,7 +296,7 @@ class REBA:
         elif abs(angle)>15: score2=2
         else: score2=1
         
-        return max(score1, score2)
+        return np.array([score1, score2])
 
     def wrist_side_bending_twisted(self, pose, joint_cam):
         score1, score2 = 0, 0
@@ -308,4 +314,4 @@ class REBA:
         elif abs(angle1)>10 or abs(angle2)>10: score2=1
         else: score2=0
         
-        return max(score1, score2)
+        return np.array([score1, score2])
