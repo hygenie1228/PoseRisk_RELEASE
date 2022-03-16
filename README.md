@@ -40,15 +40,16 @@ We provide REBA and RULA score method. You should put some additional informatio
 
 Most of the evaluation criteria referred from: [https://kosha.or.kr/kosha/business/musculoskeletal_c_d.do](https://kosha.or.kr/kosha/business/musculoskeletal_c_d.do)  
 for REBA,
-- `Legs_bilateral_weight_bearing/walking/sitting`: (1-2) If balanced of two legs 1, if not 2
-- `Load/Force Score`: (0-3) load amount, rapid build up of force, etc.
-- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
+- `Legs_bilateral_weight_bearing/walking`: (1-2) If balanced of two legs 1, if not 2
+- `Sitting`: (0-1) If seated 1, if not 0
+- `Load/Force Score_L/R)`: (0-3) load amount, rapid build up of force, etc.
+- `Arm_supported_leaning_L/R`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
 - `Coupling`: (0-3) well fitting handle, acceptable body part, etc.
 - `Activity_Score`: (0-3) repeated small range actions large acitivity, etc.
 
 for RULA,
-- `Arm_supported_leaning`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
-- `A_Muscle_use`, `A_Load/Force`: (0-1, 0-3) load amount, rapid build up of force, etc.
+- `Arm_supported_leaning_L/R`: (0-1) If arm is supported or person is learning 1, if not 0 **(IMPORTANT)**
+- `A_Muscle_use_L/R`, `A_Load/Force_L/R`: (0-1, 0-3) load amount, rapid build up of force, etc.
 - `Legs_bilateral_weight_bearing`: (1-2) If balanced of two legs 1, if not 2
 - `B_Muscle_use`, `B_Load/Force` : (0-1, 0-3) well fitting handle, acceptable body part, etc.
 
@@ -56,12 +57,24 @@ Below is the running example.
 
 Example:
 ```
+cd {Root}
+conda activate risk
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} 
 ```
 
-If want to debug only for one frame, you can get smpl model by using `debug_frame` option.
+If want to get get a log of scores, you should use `debug` option.
 ```
-python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug_frame {id of frame}
+python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug
+```
+
+If want to debug about poses of several joints, you should use `debug_joints` option.
+```
+python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug --debug_joints {joint names for debugging}
+```
+
+If want to get mesh model only for one frame, you should use `debug` option.
+```
+python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug --debug_frame {id of frame}
 ```
 
 ## Reference

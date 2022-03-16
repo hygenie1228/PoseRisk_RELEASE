@@ -2,18 +2,22 @@
 "REBA":
 {
     "Legs_bilateral_weight_bearing/walking":0
-,   "sitting":0
+,   "Sitting":0
 ,   "Load/Force Score":0
-,   "Arm_supported_leaning":0
+,   "Arm_supported_leaning_L":0
+,   "Arm_supported_leaning_R":0
 ,   "Coupling":0
 ,   "Activity_Score":0
 },
 
 "RULA":
 {
-    "Arm_supported_leaning":0
-,   "A_Muscle_use":0
-,   "A_Load/Force":0
+    "Arm_supported_leaning_L":0
+,   "Arm_supported_leaning_R":0
+,   "A_Muscle_use_L":0
+,   "A_Muscle_use_R":0
+,   "A_Load/Force_L":0
+,   "A_Load/Force_R":0
 ,   "Legs_bilateral_weight_bearing":0
 ,   "B_Muscle_use":0
 ,   "B_Load/Force":0

@@ -110,15 +110,11 @@ class RULA:
     def group_a(self, pose, joint_cam, add_info):
         upper_arm, lower_arm, wrist, wrist_twist = 0,0,0,0
 
-        upper_arm_bending = self.upper_arm_bending(pose, joint_cam)
-        upper_arm += upper_arm_bending
+        upper_arm += self.upper_arm_bending(pose, joint_cam, add_info)
         upper_arm += self.shoulder_rise(pose, joint_cam)
         upper_arm += self.upper_arm_aduction(pose, joint_cam)
-        upper_arm -= add_info["RULA"]["Arm_supported_leaning"]
-        if upper_arm_bending>1: lower_arm_bending = self.lower_arm_bending(pose, joint_cam)
-        else: lower_arm_bending = 0
-        lower_arm += lower_arm_bending
-        if upper_arm_bending>1 and lower_arm_bending>1: lower_arm += self.lower_arm_cross_out(pose, joint_cam)
+        lower_arm += self.lower_arm_bending(pose, joint_cam)
+        lower_arm += self.lower_arm_cross_out(pose, joint_cam)
         wrist += self.wrist_bending(pose, joint_cam)
         wrist += self.wrist_side_bending(pose, joint_cam)
         wrist_twist += self.wrist_twist(pose, joint_cam)
@@ -145,7 +141,7 @@ class RULA:
         leg = int(np.clip(leg, 1, 2))
         return self.table_b[neck-1][trunk-1][leg-1], [neck, trunk, leg]
 
-    def upper_arm_bending(self, pose, joint_cam):
+    def upper_arm_bending(self, pose, joint_cam, add_info):
         score1, score2 = 0, 0
         angle1 = pose[self.joint_name.index('L_Shoulder')][2]
         angle2 = pose[self.joint_name.index('L_Shoulder')][1]
@@ -157,6 +153,7 @@ class RULA:
             elif angle2<-90: score1=4
             else: score1=1
         else: score1=1
+        score1 -= add_info["RULA"]["Arm_supported_leaning_L"]
 
         angle1 = pose[self.joint_name.index('R_Shoulder')][2]
         angle2 = pose[self.joint_name.index('R_Shoulder')][1]
@@ -168,6 +165,7 @@ class RULA:
             elif angle>90: score2=4
             else: score2=1
         else: score2=1
+        score2 -= add_info["RULA"]["Arm_supported_leaning_R"]
 
         return max(score1, score2)
 

@@ -5,6 +5,7 @@ import math
 import numpy as np
 import cv2
 import shutil
+import os.path as osp
 from collections import OrderedDict
 
 import torch
@@ -13,6 +14,54 @@ from torch.nn import functional as F
 import matplotlib.pyplot as plt
 
 from core.config import cfg
+
+def get_images(file_name, tmp_path, debug=False):
+        cap = cv2.VideoCapture(file_name)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        os.makedirs(tmp_path, exist_ok=True)
+
+        width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+        if width > 800:
+            height = int(height * 800 / width)
+            width = 800
+        elif height > 450:
+            width = int(width * 450 / height)
+            height = 450
+
+        idx = 0
+        while(cap.isOpened()):
+            ret, frame = cap.read()
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            if ret == False:
+                break
+
+            frame = cv2.resize(frame, (width, height))
+            cv2.imwrite(osp.join(tmp_path, '{0:09d}.jpg'.format(idx)),frame)
+            idx += 1
+
+
+            if debug and (idx == 50):
+                print("==> Debug mode")
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
+        del cap
+        return idx, fps
+
+def select_target_id(results):
+    areas = []
+
+    for result in results:
+        bbox = result['bbox']
+        area = (bbox[:,2] * bbox[:,3]).mean()
+        areas.append(area)
+    
+    areas = np.array(areas)
+    return np.argmax(areas)
 
 def annToMask(segm, h, w):
     """

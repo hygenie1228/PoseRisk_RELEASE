@@ -116,12 +116,10 @@ class REBA:
 
     def group_b(self, pose, joint_cam, add_info):
         upper_arm, lower_arm, wrist = 0,0,0
-        upper_arm_bending = self.upper_arm_bending(pose, joint_cam)
-        upper_arm += upper_arm_bending
+        upper_arm += self.upper_arm_bending(pose, joint_cam, add_info)
         upper_arm += self.shoulder_rise(pose, joint_cam)
         upper_arm += self.upper_arm_aduction(pose, joint_cam)
-        upper_arm -= add_info["REBA"]["Arm_supported_leaning"]
-        if upper_arm_bending>1: lower_arm += self.lower_arm_bending(pose, joint_cam)
+        lower_arm += self.lower_arm_bending(pose, joint_cam)
         wrist += self.wrist_bending(pose, joint_cam)
         wrist += self.wrist_side_bending_twisted(pose, joint_cam)
 
@@ -174,19 +172,19 @@ class REBA:
 
         if angle<30: score1=0
         elif angle>30 and angle<60: score1=1
-        elif angle>60 and add_info["REBA"]["sitting"] > 0 : score1=2
+        elif angle>60 and add_info["REBA"]["Sitting"] > 0 : score1=2
         else: score1=0
 
         angle = pose[self.joint_name.index('R_Knee')][0]
 
         if angle<30: score2=0
         elif angle>30 and angle<60: score2=1
-        elif angle>60 and add_info["REBA"]["sitting"] > 0 : score2=2
+        elif angle>60 and add_info["REBA"]["Sitting"] > 0 : score2=2
         else: score2=0
 
         return max(score1, score2)
 
-    def upper_arm_bending(self, pose, joint_cam):
+    def upper_arm_bending(self, pose, joint_cam, add_info):
         score1, score2 = 0, 0
         angle1 = pose[self.joint_name.index('L_Shoulder')][2]
         angle2 = pose[self.joint_name.index('L_Shoulder')][1]
@@ -198,6 +196,7 @@ class REBA:
             elif angle2<-90: score1=4
             else: score1=1
         else: score1=1
+        score1 -= add_info["REBA"]["Arm_supported_leaning_L"]
 
         angle1 = pose[self.joint_name.index('R_Shoulder')][2]
         angle2 = pose[self.joint_name.index('R_Shoulder')][1]
@@ -209,6 +208,7 @@ class REBA:
             elif angle2>90: score2=4
             else: score2=1
         else: score2=1
+        score2 -= add_info["REBA"]["Arm_supported_leaning_R"]
 
         return max(score1, score2)
 

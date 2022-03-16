@@ -23,10 +23,13 @@ from multi_person_tracker.data import video_to_images
 from models import hmr
 from smpl import SMPL
 
+from funcs_utils import select_target_id, get_images
+from coord_utils import axis_angle_to_euler_angle, rot_to_angle, get_joint_cam
 from vis_utils import save_obj, visualize_box, report_pose, vis_3d_pose
+
 from reba import REBA
 from rula import RULA
-from coord_utils import axis_angle_to_euler_angle, rot_to_angle, get_joint_cam
+
 
 class DataProcessing:
     def __init__(self):
@@ -47,17 +50,14 @@ class DataProcessing:
         image_path = osp.join(output_path, 'tmp')
         os.system(f'rm -rf {image_path}')
 
-        print()
-        print("===> Data preprocessing...")
-        file_num, fps = self.get_images(input_path, image_path)
+        print("\n===> Data preprocessing...")
+        file_num, fps = get_images(input_path, image_path, debug=True)
         min_frame_num = file_num * cfg.DATASET.min_frame_ratio
 
-        if min_frame_num > 1000:
-            min_frame_num = 1000
+        if min_frame_num > 1000: min_frame_num = 1000
 
         # tracking    
-        print() 
-        print("===> Get human tracking results...") 
+        print("\n===> Get human tracking results...") 
         tracking_results = self.tracker(image_path) 
 
         filtered_results = []
@@ -71,60 +71,9 @@ class DataProcessing:
 
         tracking_results = filtered_results
 
-        idx = self.select_target_id(tracking_results)
-        #print("!!!")
-        #idx = 2
+        idx = select_target_id(tracking_results)
         result = tracking_results[idx]
         return image_path, file_num, fps, result['bbox'], result['frames']
-
-
-    def select_target_id(self, results):
-        areas = []
-
-        for result in results:
-            bbox = result['bbox']
-            area = (bbox[:,2] * bbox[:,3]).mean()
-            areas.append(area)
-        
-        areas = np.array(areas)
-        return np.argmax(areas)
-
-    def get_images(self, file_name, tmp_path):
-        cap = cv2.VideoCapture(file_name)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        os.makedirs(tmp_path, exist_ok=True)
-
-        width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-
-        if width > 800:
-            height = int(height * 800 / width)
-            width = 800
-        elif height > 450:
-            width = int(width * 450 / height)
-            height = 450
-
-        idx = 0
-        while(cap.isOpened()):
-            ret, frame = cap.read()
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            if ret == False:
-                break
-
-            frame = cv2.resize(frame, (width, height))
-            cv2.imwrite(osp.join(tmp_path, '{0:09d}.jpg'.format(idx)),frame)
-            idx += 1
-
-            #if idx == 1500:
-            #    print("!!!")
-            #    break
-
-        cap.release()
-        cv2.destroyAllWindows()
-        del cap
-        return idx, fps
-
 
 class Predictor:
     def __init__(self, args):
@@ -132,27 +81,23 @@ class Predictor:
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.smpl_model = SMPL()
         self.spin_model = hmr(cfg.SPIN.SMPL_MEAN_PARAMS).to(self.device)
+
         checkpoint = torch.load(cfg.SPIN.checkpoint)
         self.spin_model.load_state_dict(checkpoint['model'], strict=False)
 
         self.reba, self.rula = REBA(), RULA()
 
-        score_type = args.type
-        scores = score_type.replace(' ', '').upper().split(',')
-        if 'REBA' in scores:
-            self.run_reba = True
-        else:
-            self.run_reba = False
+        scores = args.type.replace(' ', '').upper().split(',')
+        if 'REBA' in scores: self.run_reba = True
+        else: self.run_reba = False
 
-        if 'RULA' in scores:
-            self.run_rula = True
-        else:
-            self.run_rula = False
-        
+        if 'RULA' in scores: self.run_rula = True
+        else: self.run_rula = False
+
         self.debugging = args.debug
-        self.smpl_joint_names = ('L_Hip', 'R_Hip', 'Torso', 'L_Knee', 'R_Knee', 'Spine', 'L_Ankle', 'R_Ankle', 'Chest', 'L_Toe',
-        'R_Toe', 'Neck', 'L_Thorax', 'R_Thorax', 'Head', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist',
-        'R_Wrist', 'L_Hand', 'R_Hand')
+        self.debug_frame = args.debug_frame
+        debug_joints = args.debug_joints.replace(' ', '').upper().split(',')
+        self.debug_joints = debug_joints
 
     def __call__(self, input_path, info_path, output_path, debug_frame):
         # data processing (tracking)
@@ -167,46 +112,16 @@ class Predictor:
             joints2d=None,
             scale=cfg.DATASET.bbox_scale,
         ) 
-
         crop_dataloader = DataLoader(dataset, batch_size=cfg.DATASET.batch_size, num_workers=cfg.DATASET.workers)
 
-        self.spin_model.eval()
-        images = []
-        result = []
-        debug_result=[]
-        print()
-        print("===> Estimate human pose...")  
-        with torch.no_grad():
-            for i, batch in tqdm(enumerate(crop_dataloader)):
-                batch = batch.to(self.device)
-                pred_rotmat, pred_betas, pred_camera = self.spin_model(batch)
-                
-                pred_rotmat = pred_rotmat.cpu().numpy()
-                res = []
-                de_res = []
-                for rotmat in pred_rotmat:
-                    pose = rot_to_angle(rotmat)
-                    de_res.append(pose)
-                    pose = axis_angle_to_euler_angle(pose)
-                    res.append(pose)
-                res = np.stack(res)
-                result.append(res)
-                debug_result.append(de_res)
-                images.append(batch.cpu().numpy())
-
-        result = np.concatenate(result)
-        images = np.concatenate(images)
-        debug_result = np.concatenate(debug_result)
-        joint_cam = get_joint_cam(debug_result, self.smpl_model)
-
-        # For debug - joint_cam
-        if self.debugging:
-            print()
-            print("===> Visualize Estimated Results...")  
-            self.visualize_joint_cam(joint_cam, timestamp, output_path)
+        # get estimation results
+        result, joint_cam, images, debug_result = self.get_pose_estimation_results(crop_dataloader)
 
         # For debug - mesh
         if self.debugging and debug_frame>=0:
+            print(f"\n===> Debug Result at frame #{debug_frame}")  
+            self.visualize_joint_cam(joint_cam, self.debug_frame, output_path)
+
             idx = np.where(frames==debug_frame)[0][0]
             
             pose = torch.tensor(debug_result[idx]).view(1, -1).float()
@@ -230,8 +145,7 @@ class Predictor:
 
         pose_str = self.pose_to_str(result)
 
-        print()
-        print("===> Post Processing...")  
+        print("\n===> Post Processing...")  
         if self.run_reba:
             reba_results, reba_joint_names = self.reba(result, joint_cam, add_info)
 
@@ -266,14 +180,11 @@ class Predictor:
 
         os.system(f'rm -rf {image_folder}')
 
-        print()
-        print()
-        print("===> DONE!")
+        print("\n\n===> DONE!")
         print("Result files saved in ", output_path)    
 
         if self.run_reba:
-            print()
-            print("----- REBA -----")
+            print("\n----- REBA -----")
             print("AVG Score:\t", final_score_reba[0])
             print("%50 Score:\t", final_score_reba[1])
             print("%10 Score:\t", final_score_reba[2])
@@ -284,8 +195,7 @@ class Predictor:
             print()
 
         if self.run_rula:
-            print()
-            print("----- RULA -----")
+            print("\n----- RULA -----")
             print("AVG Score:\t", final_score_rula[0])
             print("%50 Score:\t", final_score_rula[1])
             print("%10 Score:\t", final_score_rula[2])
@@ -294,6 +204,37 @@ class Predictor:
             print("\nAction Level:\t", rula_action_level)
             print("Action:\t\t", rula_action_name)
             print()
+
+    def get_pose_estimation_results(self, crop_dataloader):
+        self.spin_model.eval()
+        images = []
+        result = []
+        debug_result=[]
+        print("\n===> Estimate human pose...")  
+        with torch.no_grad():
+            for i, batch in tqdm(enumerate(crop_dataloader)):
+                batch = batch.to(self.device)
+                pred_rotmat, pred_betas, pred_camera = self.spin_model(batch)
+                
+                pred_rotmat = pred_rotmat.cpu().numpy()
+                res = []
+                de_res = []
+                for rotmat in pred_rotmat:
+                    pose = rot_to_angle(rotmat)
+                    de_res.append(pose)
+                    pose = axis_angle_to_euler_angle(pose)
+                    res.append(pose)
+                res = np.stack(res)
+                result.append(res)
+                debug_result.append(de_res)
+                images.append(batch.cpu().numpy())
+
+        result = np.concatenate(result)
+        images = np.concatenate(images)
+        debug_result = np.concatenate(debug_result)
+
+        joint_cam = get_joint_cam(debug_result, self.smpl_model)
+        return result, joint_cam, images, debug_result
 
     def post_processing_result(self, results, joint_names, timestamp, output_path, title=''):
         scores = []
@@ -369,7 +310,7 @@ class Predictor:
         score_mode = mode(scores).mode.item()
         return (score_avg, score50, score10, score_max, score_mode), scores_log, group_a, group_b, logs
 
-    def visualize_joint_cam(self, joint_cam, timestamp, output_path):
+    def visualize_joint_cam(self, joint_cam, debug_frame, output_path):
         image_folder = osp.join(output_path, 'debug')
         os.system(f'rm -rf {image_folder}')
         os.makedirs(image_folder, exist_ok=True)
@@ -463,9 +404,9 @@ class Predictor:
         for joint_name in joint_names:
             title.append(joint_name)
 
-        title.append('Joint Angle(BEND1,BEND2,TWIST)')
+        title.append('Joint Angle(x,y,z)')
 
-        for joint_name in self.smpl_joint_names:
+        for joint_name in self.smpl_model.joints_name:
             title.append(joint_name)
 
         wr.writerow(title)
@@ -485,7 +426,7 @@ class Predictor:
                     row.append(logs[idx][j])
 
                 row.append('')
-                for j, joint in enumerate(self.smpl_joint_names):
+                for j, joint in enumerate(self.smpl_model.joints_name[1:]):
                     row.append(str(pose_str[idx][j]))
 
             wr.writerow(row)
@@ -498,10 +439,7 @@ class Predictor:
         for i, pose in enumerate(poses[:,1:,:]):
             str_list = []
             for j, pose_i in enumerate(pose):
-                joint_name = self.smpl_joint_names[j]
-                if joint_name not in ('L_Thorax', 'R_Thorax', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist', 'R_Wrist', 'L_Hand', 'R_Hand'):
-                    str_list.append(f"({pose_i[0]:.3f}, {pose_i[2]:.3f}, {pose_i[1]:.3f})")
-                else:
-                    str_list.append(f"({pose_i[1]:.3f}, {pose_i[2]:.3f}, {pose_i[0]:.3f})")
+                joint_name = self.smpl_model.joints_name[j]
+                str_list.append(f"({pose_i[0]:.3f}, {pose_i[1]:.3f}, {pose_i[2]:.3f})")
             pose_log.append(str_list)
         return pose_log
