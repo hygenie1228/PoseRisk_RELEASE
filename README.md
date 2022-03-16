@@ -5,7 +5,7 @@ This repository is the implementation of an automatic human hazard detection mod
 
 
 <p align="center">
-  <img src="asset/example.gif" width="80%" />
+  <img src="asset/example.gif" width="85%" />
 </p>
 
 
@@ -63,17 +63,17 @@ python main/run.py --type REBA,RULA --input {input video path} --info {additiona
 ```
 
 ## Debug mode
-If want to get get a log of scores, you should use `debug` option.
+If want to get score sequences, you should use `debug` option.
 ```
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug
 ```
 
-If want to debug about poses of several joints, you should use `debug_joints` option.
+If want to get pose sequences for several joints, you should add `debug_joints` option.
 ```
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug --debug_joints {joint names for debugging}
 ```
-  
-If want to get mesh model only for one frame, you should use `debug_frame` option.
+
+If want to get estimation result only for one frame, you should add `debug_frame` option.
 ```
 python main/run.py --type REBA,RULA --input {input video path} --info {additional information path} --output {output directory} --debug --debug_frame {id of frame}
 ```

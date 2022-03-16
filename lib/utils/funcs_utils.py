@@ -43,7 +43,7 @@ def get_images(file_name, tmp_path, debug=False):
             idx += 1
 
 
-            if debug and (idx == 1500):
+            if debug and (idx == 2000):
                 print("\n==> Debug mode")
                 break
 
