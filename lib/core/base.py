@@ -83,7 +83,7 @@ class Predictor:
         checkpoint = torch.load(cfg.SPIN.checkpoint)
         self.spin_model.load_state_dict(checkpoint['model'], strict=False)
 
-        self.reba, self.rula = REBA(), RULA()
+        self.reba, self.rula = REBA(args.debug), RULA(args.debug)
 
         scores = args.type.replace(' ', '').upper().split(',')
         if 'REBA' in scores: self.run_reba = True
@@ -110,6 +110,8 @@ class Predictor:
         image_folder, img_num, fps, bboxes, frames = self.data_loader(input_path, output_path)
         start_id, end_id = frames[0], frames[-1]+1
         timestamp = (0, frames, img_num)  
+        debug_path = osp.join(output_path, 'debug')
+        os.system(f'rm -rf {debug_path}; mkdir {debug_path}')
 
         dataset = CropDataset(
             image_folder=image_folder,
@@ -126,9 +128,9 @@ class Predictor:
         # For debug - mesh
         if self.debugging and self.debug_frame>=0:
             print(f"\n===> Debug Result at frame #{self.debug_frame}")  
-            self.visualize_joint_cam_mesh(debug_result, joint_cam, frames, output_path)
+            self.visualize_joint_cam_mesh(debug_result, joint_cam, frames, debug_path)
 
-            print("\n Debug files are saved in : ", output_path)   
+            print("\n Debug files are saved in : ", debug_path)   
             os.system(f'rm -rf {image_folder}')
             return 
 
@@ -140,6 +142,9 @@ class Predictor:
                 add_info = json.load(f)
 
         pose_str = pose_to_str(result)
+        if self.debugging and self.debug_joints is not None:
+            self.save_csv_pose_log(pose_str, timestamp, debug_path)
+
 
         print("\n===> Post Processing...")  
         if self.run_reba:
@@ -150,7 +155,7 @@ class Predictor:
 
             self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_reba, scores, self.reba.eval_items, logs, add_info["REBA"], output_path, title="REBA")
             if self.debugging:
-                self.save_csv(pose_str, timestamp, scores, self.reba.eval_items, logs, output_path, title="REBA")
+                self.save_csv(pose_str, timestamp, scores, self.reba.eval_items, logs, self.reba.log, debug_path, title="REBA")
 
             reba_action_level, reba_action_name = self.reba.action_level(final_score_reba[4])
             f = open(osp.join(output_path, 'reba_result.txt'), 'w')
@@ -167,7 +172,7 @@ class Predictor:
 
             self.visualize_result(image_folder, bboxes, timestamp, fps, final_score_rula, scores, self.rula.eval_items, logs, add_info["RULA"], output_path, title="RULA")
             if self.debugging:
-                self.save_csv(pose_str, timestamp, scores, self.rula.eval_items, logs, output_path, title="RULA")
+                self.save_csv(pose_str, timestamp, scores, self.rula.eval_items, logs, self.rula.log, debug_path, title="RULA")
             rula_action_level, rula_action_name = self.rula.action_level(final_score_rula[4])
 
             f = open(osp.join(output_path, 'rula_result.txt'), 'w')
@@ -321,7 +326,29 @@ class Predictor:
             video_writer.write(np.uint8(canvas))
         video_writer.release()
 
-    def save_csv(self, pose_str, timestamp, scores, joint_names, logs, output_path, title="REBA"):
+    def save_csv_pose_log(self, pose_str, timestamp, output_path):
+        f = open(osp.join(output_path, 'pose_log.csv'),'w', newline='')
+        wr = csv.writer(f)
+        csv_title = ['Frame', 'Joint Pose']
+        
+        for joint_name in self.debug_joints:
+            csv_title.append(joint_name)
+
+        wr.writerow(csv_title)
+        for i in range(timestamp[0], timestamp[-1]):
+            row = []
+            row.append(i)
+
+            if i in timestamp[1]:
+                idx = np.where(timestamp[1]==i)[0][0]
+                row.append('')
+                for joint in self.debug_joints:
+                    joint_idx = self.smpl_model.joints_name_upper.index(joint.upper())
+                    row.append(str(pose_str[idx][joint_idx]))
+            wr.writerow(row)
+        f.close()
+
+    def save_csv(self, pose_str, timestamp, scores, joint_names, logs, pose_logs, output_path, title="REBA"):
         f = open(osp.join(output_path, title+'_score_log.csv'),'w', newline='')
         wr = csv.writer(f)
         csv_title = ['Frame','Final_score','Joint Score']
@@ -345,28 +372,30 @@ class Predictor:
             wr.writerow(row)
         f.close()
 
-        if self.debug_joints is not None:
-            f = open(osp.join(output_path, title+'_pose_log.csv'),'w', newline='')
-            wr = csv.writer(f)
-            csv_title = ['Frame', 'Joint Pose']
-            
-            for joint_name in self.debug_joints:
-                csv_title.append(joint_name)
+        #### eval_pose_log
+        f = open(osp.join(output_path, title+'_eval_pose_log.csv'),'w', newline='')
+        wr = csv.writer(f)
+        csv_title = ['Frame','']
+        
+        eval_names = pose_logs[0].keys()
+        for eval_name in eval_names:
+            csv_title.append(eval_name)
 
-            wr.writerow(csv_title)
-            for i in range(timestamp[0], timestamp[-1]):
-                row = []
-                row.append(i)
+        wr.writerow(csv_title)
+        for i in range(timestamp[0], timestamp[-1]):
+            row = []
+            row.append(i)
 
-                if i in timestamp[1]:
-                    idx = np.where(timestamp[1]==i)[0][0]
-                    row.append('')
-                    for joint in self.debug_joints:
-                        joint_idx = self.smpl_model.joints_name_upper.index(joint.upper())
-                        row.append(str(pose_str[idx][joint_idx]))
-                wr.writerow(row)
-            f.close()
+            if i in timestamp[1]:
+                idx = np.where(timestamp[1]==i)[0][0]
 
+                row.append('')
+                for j, eval_name in enumerate(eval_names):
+                    row.append(str(pose_logs[idx][eval_name]))
+
+            wr.writerow(row)
+        f.close()
+        
     def visualize_joint_cam(self, joint_cam, debug_frame, output_path):
         image_folder = osp.join(output_path, 'debug')
         os.system(f'rm -rf {image_folder}')

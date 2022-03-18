@@ -6,10 +6,8 @@
 ,   "Load/Force Score":0
 ,   "Arm_supported_leaning_L":0
 ,   "Arm_supported_leaning_R":0
-,   "Coupling_L":0
-,   "Coupling_R":0
-,   "Activity_Score_L":0
-,   "Activity_Score_R":0
+,   "Coupling":0
+,   "Activity_Score":0
 },
 
 "RULA":

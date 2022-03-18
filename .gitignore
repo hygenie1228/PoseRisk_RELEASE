@@ -17,6 +17,8 @@ lib/SPIN/
 *.jpg
 *.out
 experiment/
+data_experiment
+debug_ex
 log/
 data/NRF
 data/*/*.json

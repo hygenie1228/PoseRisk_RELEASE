@@ -178,7 +178,7 @@ def axisEqual3D(ax):
     for ctr, dim in zip(centers, 'xyz'):
         getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
 
-def vis_3d_pose(kps_3d, kps_line, joint_set_name='', file_path='image.png', ax_in=None, kps_3d_vis=None):
+def vis_3d_pose(kps_3d, kps_line, joint_set_name='', file_path='image.png', frame=0, ax_in=None, kps_3d_vis=None):
     if joint_set_name == 'human36':
         r_joints = [1, 2, 3, 14, 15, 16]
     elif joint_set_name == 'coco':
