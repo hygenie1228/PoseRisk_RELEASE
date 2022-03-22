@@ -1,8 +1,8 @@
 {
 "REBA":
 {
-    "Legs_bilateral_weight_bearing/walking":0
-,   "Sitting":0
+    "Legs_bilateral_weight_bearing/walking":1
+,   "Sitting":1
 ,   "Load/Force Score":0
 ,   "Arm_supported_leaning_L":0
 ,   "Arm_supported_leaning_R":0

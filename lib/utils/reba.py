@@ -230,6 +230,23 @@ class REBA:
 
     def shoulder_rise(self, pose, joint_cam):
         score1, score2 = 0, 0
+        angle1 = pose[self.joint_name.index('L_Thorax')][2]
+        
+        if abs(angle1)<10: score1=0
+        elif abs(angle1)>=10: score1=1
+        else: score1=0
+
+        angle2 = pose[self.joint_name.index('R_Thorax')][2]
+
+        if abs(angle2)<10: score2=0
+        elif abs(angle2)>=10: score2=1
+        else: score2=0
+
+        self.angle_log['shoulder_rise'] = f'L {angle1:.1f} R {angle2:.1f}'
+        return np.array([score1, score2])
+
+    '''def shoulder_rise(self, pose, joint_cam):
+        score1, score2 = 0, 0
 
         lshoulder = joint_cam[self.joint_name.index('L_Shoulder')]
         chest = joint_cam[self.joint_name.index('Chest')]
@@ -256,7 +273,7 @@ class REBA:
         else: score2=0
 
         self.angle_log['shoulder_rise'] = f'L {angle1:.1f} R {angle2:.1f}'
-        return np.array([score1, score2])
+        return np.array([score1, score2])'''
 
     def upper_arm_abducted_rotated(self, pose, joint_cam):
         score1, score2 = 0, 0
