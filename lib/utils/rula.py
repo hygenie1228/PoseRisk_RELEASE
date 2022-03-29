@@ -166,6 +166,13 @@ class RULA:
             elif angle2>-90 and angle2<=-45: score1=3
             elif angle2<-90: score1=4
             else: score1=1
+        elif angle1>-20:
+            if abs(angle2)<20: score1=1
+            elif angle2>20 and angle2<70: score1=2
+            elif angle2>70: score1=2
+            elif angle2>-70 and angle2<-20: score1=4
+            elif angle2<-70: score1=4
+            else: score1=1
         else: score1=1
         score1 -= add_info["RULA"]["Arm_supported_leaning_L"]
 
@@ -177,6 +184,13 @@ class RULA:
             elif angle4<-20 or (angle4>20 and angle4<=45): score2=2
             elif angle4>45 and angle4<=90: score2=3
             elif angle4>90: score2=4
+            else: score2=1
+        elif angle3<20:
+            if abs(angle4)<20: score2=1
+            elif angle4>-70 and angle4<-20: score2=2
+            elif angle4<-70: score2=2
+            elif angle4>20 and angle4<70: score2=4
+            elif angle4>70: score2=4
             else: score2=1
         else: score2=1
         score2 -= add_info["RULA"]["Arm_supported_leaning_R"]
@@ -236,16 +250,36 @@ class RULA:
         score1, score2 = 0, 0
 
         angle1 = pose[self.joint_name.index('L_Shoulder')][2]
+        angle2 = pose[self.joint_name.index('L_Shoulder')][1]
 
-        if angle1<45: score1=0
-        elif angle1>45: score1=1
-        else: score1=0
+        if angle1>-110 and angle1<-20:
+            if angle1<45: score1=0
+            elif angle1>45: score1=1
+            else: score1=0
+        elif angle1>-20:
+            if abs(angle2)<20: score1=1
+            elif angle2>20 and angle2<70: score1=1
+            elif angle2>70: score1=0
+            elif angle2>-70 and angle2<-20: score1=1
+            elif angle2<-70: score1=0
+            else: score1=0
+        else:
+            score1=0
 
-        angle2 = pose[self.joint_name.index('R_Shoulder')][2]
+        angle3 = pose[self.joint_name.index('R_Shoulder')][2]
+        angle4 = pose[self.joint_name.index('R_Shoulder')][1]
 
-        if angle2<45: score2=0
-        elif angle2>45: score2=1
-        else: score2=0
+        if angle3>20 and angle3<110:
+            if angle3>45: score2=0
+            elif angle3<45: score2=1
+            else: score2=0
+        elif angle3<20:
+            if abs(angle4)<20: score2=1
+            elif angle4>-70 and angle4<-20: score2=1
+            elif angle4<-70: score2=0
+            elif angle4>20 and angle4<70: score2=1
+            elif angle4>70: score2=0
+            else: score2=0
 
         self.angle_log['upper_arm_abducted'] = f'L {angle1:.1f} R {angle2:.1f}'
         return np.array([score1, score2])

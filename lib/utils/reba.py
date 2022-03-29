@@ -204,11 +204,18 @@ class REBA:
         angle1 = pose[self.joint_name.index('L_Shoulder')][2]
         angle2 = pose[self.joint_name.index('L_Shoulder')][1]
 
-        if angle1>-70 and angle1<110:
+        if angle1>-110 and angle1<-20:
             if abs(angle2)<20: score1=1
             elif angle2>20 or (angle2>-45 and angle2<-20): score1=2
             elif angle2>-90 and angle2<=-45: score1=3
             elif angle2<-90: score1=4
+            else: score1=1
+        elif angle1>-20:
+            if abs(angle2)<20: score1=1
+            elif angle2>20 or angle2<70: score1=2
+            elif angle2>70: score1=2
+            elif angle2>-70 and angle2<-20: score1=4
+            elif angle2<-70: score1=4
             else: score1=1
         else: score1=1
         score1 -= add_info["REBA"]["Arm_supported_leaning_L"]
@@ -216,11 +223,18 @@ class REBA:
         angle3 = pose[self.joint_name.index('R_Shoulder')][2]
         angle4 = pose[self.joint_name.index('R_Shoulder')][1]
 
-        if angle3>-70 and angle3<110:
+        if angle3>20 and angle3<110:
             if abs(angle4)<20: score2=1
             elif angle4<-20 or (angle4>20 and angle4<=45): score2=2
             elif angle4>45 and angle4<=90: score2=3
             elif angle4>90: score2=4
+            else: score2=1
+        elif angle1>-20:
+            if abs(angle2)<20: score2=1
+            elif angle2>20 or angle2<70: score2=2
+            elif angle2>70: score2=2
+            elif angle2>-70 and angle2<-20: score2=4
+            elif angle2<-70: score2=4
             else: score2=1
         else: score2=1
         score2 -= add_info["REBA"]["Arm_supported_leaning_R"]
@@ -280,16 +294,41 @@ class REBA:
 
         angle1 = pose[self.joint_name.index('L_Shoulder')][2]
         angle2 = pose[self.joint_name.index('L_Shoulder')][0]
+        angle3 = pose[self.joint_name.index('L_Shoulder')][1]
 
-        if angle1<45 and angle2<10: score1=0
-        elif angle1>45 or angle2>10: score1=1
-        else: score1=0
+        if angle1>-110 and angle1<-20:
+            if angle1<45 and abs(angle2)<10: score1=0
+            elif angle1>45 or abs(angle2)>10: score1=1
+            else: score1=0
+        elif angle1>-20:
+            if abs(angle3)<20: score1=1
+            elif angle3>20 or angle3<70: score1=1
+            elif angle3>70: score1=0
+            elif angle3>-70 and angle3<-20: score1=1
+            elif angle3<-70: score1=0
+            else: score1=0
 
-        angle3 = pose[self.joint_name.index('R_Shoulder')][2]
-        angle4 = pose[self.joint_name.index('R_Shoulder')][0]
+            if abs(angle2)>10:score1+=1
+        else:
+            score1 = 0
 
-        if angle3>-45 and angle4<10: score2=0
-        elif angle3<-45 or angle4>10: score2=1
+        angle4 = pose[self.joint_name.index('R_Shoulder')][2]
+        angle5 = pose[self.joint_name.index('R_Shoulder')][0]
+        angle6 = pose[self.joint_name.index('R_Shoulder')][1]
+
+        if angle4>20 and angle4<110:
+            if angle4>45 and abs(angle5)<10: score2=0
+            elif angle4<45 or abs(angle5)>10: score2=1
+            else: score2=0
+        elif angle4<20:
+            if abs(angle6)<20: score2=1
+            elif angle6>-70 and angle6<-20: score2=1
+            elif angle6<-70: score2=0
+            elif angle6>20 and angle6<70: score2=1
+            elif angle6>70: score2=0
+            else: score2=0
+
+            if abs(angle5)>10:score1+=1
         else: score2=0
 
         self.angle_log['upper_arm_abducted_rotated'] = f'L {angle1:.1f},{angle2:.1f} R {angle3:.1f},{angle4:.1f}'
