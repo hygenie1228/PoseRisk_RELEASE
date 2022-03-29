@@ -29,6 +29,9 @@ data/*/annotation
 data/*/annotations
 example/*.mp4
 output
+lib/multi_person_tracker
+lib/SPIN
+experiment
 
 
 # Distribution / packaging
