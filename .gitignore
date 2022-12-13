@@ -5,23 +5,33 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+lib/multi_person_tracker/
+lib/SPIN/
+
 # C extensions
 *.so
 
 # custom
 .idea/*
-example2
-# *.png
+*.png
 *.jpg
 *.out
 experiment/
+data_experiment
+debug_ex
 log/
+data/NRF
 data/*/*.json
 data/*/*/*.json
 data/*/images
 data*/data
 data/*/annotation
 data/*/annotations
+example/*.mp4
+output
+lib/multi_person_tracker
+lib/SPIN
+experiment
 
 
 # Distribution / packaging

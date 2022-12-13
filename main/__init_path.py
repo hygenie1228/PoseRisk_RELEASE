@@ -22,6 +22,9 @@ add_path(data_path)
 util_path = osp.join(this_dir, '..', 'lib', 'utils')
 add_path(util_path)
 
+spin_path = osp.join(this_dir, '..', 'lib', 'multi_person_tracker')
+add_path(spin_path)
+
 spin_path = osp.join(this_dir, '..', 'lib', 'SPIN')
 add_path(spin_path)
 

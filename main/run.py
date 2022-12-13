@@ -14,12 +14,14 @@ parser.add_argument('--input', type=str, default='example/input.mp4', help='inpu
 parser.add_argument('--info', type=str, default='example/additional_information.json', help='input additional_information.json')
 parser.add_argument('--output', type=str, default='output', help='output directory')
 parser.add_argument('--visualize', type=bool, default=True, help='do result visualization')
+parser.add_argument('--debug', action='store_true', help='for debuging')
+parser.add_argument('--debug_joints', type=str, default='', help='for debuging, input joint names (i.e. "Neck,L_Hip")')
 parser.add_argument('--debug_frame', type=int, default=-1, help='for debuging, input frame number')
-parser.add_argument('--cfg', type=str, help='experiment configure file name')
+#parser.add_argument('--cfg', type=str, help='experiment configure file name')
 
 args = parser.parse_args()
-if args.cfg:
-    update_config(args.cfg)
+#if args.cfg:
+#    update_config(args.cfg)
 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 print("Work on GPU: ", os.environ['CUDA_VISIBLE_DEVICES'])
@@ -27,4 +29,4 @@ print("Work on GPU: ", os.environ['CUDA_VISIBLE_DEVICES'])
 from core.base import Predictor
 
 predictor = Predictor(args)
-predictor(args.input, args.info, args.output, args.debug_frame)
+predictor(args.input, args.info, args.output)

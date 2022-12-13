@@ -4,6 +4,30 @@ import torch
 import math
 import cv2
 
+def get_joint_cam(poses, smpl_model):
+    shape = torch.zeros((1,10)).float()
+    joint_cam = []
+    init_pose = torch.tensor([3.14,0,0])
+
+    for i, pose in enumerate(poses):
+        pose[0] = init_pose
+        pose = torch.tensor(pose).view(1, -1).float()
+        smpl_mesh_coord, smpl_joint_coord =smpl_model.layer['neutral'](pose, shape)
+        smpl_joint_coord = smpl_joint_coord.squeeze().cpu().numpy()* 1000
+        smpl_joint_coord = smpl_joint_coord - smpl_joint_coord[0, None]
+        joint_cam.append(smpl_joint_coord)
+
+    joint_cam = np.stack(joint_cam)
+    return joint_cam
+
+
+def rot_to_angle(rotmat):
+    pose = []
+    for p in rotmat:
+        pp = cv2.Rodrigues(p)[0].reshape(-1)
+        pose.append(pp)
+    pose = np.stack(pose)
+    return pose
 
 def rotation_matrix_to_rotVec(Rmat):    
     theta = math.acos(((Rmat[0, 0] + Rmat[1, 1] + Rmat[2, 2]) - 1) / 2)
@@ -46,7 +70,7 @@ def rotationMatrixToEulerAngles(R) :
     assert(isRotationMatrix(R))
     sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
     singular = sy < 1e-6
-    if  not singular :
+    if not singular :
         x = math.atan2(R[2,1] , R[2,2])
         y = math.atan2(-R[2,0], sy)
         z = math.atan2(R[1,0], R[0,0])

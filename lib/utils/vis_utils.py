@@ -2,10 +2,18 @@ import os.path as osp
 from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import os
 from core.config import cfg
+
+def pose_to_str(poses):
+    pose_log = []
+    for i, pose in enumerate(poses):
+        str_list = []
+        for j, pose_i in enumerate(pose):
+            str_list.append(f"({pose_i[0]:.3f}, {pose_i[1]:.3f}, {pose_i[2]:.3f})")
+        pose_log.append(str_list)
+    return pose_log
 
 def save_video(imgs, fps=20, file_name=''):
     h,w,c = imgs[0].shape
@@ -170,8 +178,7 @@ def axisEqual3D(ax):
     for ctr, dim in zip(centers, 'xyz'):
         getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
 
-
-def vis_3d_pose(kps_3d, kps_line, joint_set_name='', prefix='vis3dpose', gt=False, ax_in=None):
+def vis_3d_pose(kps_3d, kps_line, joint_set_name='', file_path='image.png', frame=0, ax_in=None, kps_3d_vis=None):
     if joint_set_name == 'human36':
         r_joints = [1, 2, 3, 14, 15, 16]
     elif joint_set_name == 'coco':
@@ -181,12 +188,18 @@ def vis_3d_pose(kps_3d, kps_line, joint_set_name='', prefix='vis3dpose', gt=Fals
     else:
         r_joints = []
 
-    kps_3d_vis = np.ones((len(kps_3d), 1))
+    if kps_3d_vis is None:
+        kps_3d_vis = np.ones((len(kps_3d), 1))
+    else:
+        kps_3d_vis = kps_3d_vis.reshape(-1, 1)
+        
     if not ax_in:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
     else:
         ax = ax_in
+
+    fig.set_size_inches(5, 3.75)
 
     for l in range(len(kps_line)):
         i1 = kps_line[l][0]
@@ -207,25 +220,21 @@ def vis_3d_pose(kps_3d, kps_line, joint_set_name='', prefix='vis3dpose', gt=Fals
     ax.set_xlabel('X axis')
     ax.set_ylabel('Z axis')
     ax.set_zlabel('Y axis')
+    
+    ax.set_xlim3d(-800, 800)
+    ax.set_ylim3d(-800, 800)
+    ax.set_zlim3d(-800, 800)
 
-    title = f'3D Ground Truth' if gt else f' 3D Prediction'
+    title = f'3D Skeleton - frame: {frame}'
     ax.set_title(title)
-    ax.legend()
     axisEqual3D(ax)
 
     if not ax_in:
-        #plt.show()
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
-        #cv2.waitKey(1)
-
-        now = datetime.now()
-        file_name = f'{prefix}_{now.isoformat()[:-7]}_{"3d_gt" if gt else "3d_pred"}.jpg'
-        fig.savefig(osp.join(cfg.vis_dir, file_name))
+        fig.savefig(file_path)
         plt.close(fig=fig)
     else:
         return ax
-
+        
 def save_obj(v, f=None, file_name=''):
     obj_file = open(file_name, 'w')
     for i in range(len(v)):
